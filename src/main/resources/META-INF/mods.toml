@@ -1,0 +1,50 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+issueTrackerURL="https://github.com/erutobusiness"
+
+[[mixins]]
+config="elytraboostlimit.mixins.json"
+
+[[mods]]
+modId="elytra_boost_limit"
+version="1.2.0"
+displayName="Elytra Boost Limit"
+authors="erutobusiness"
+description='''
+Turns firework boosting into a way to gain height instead of a way to cross the map.
+
+A rocket stops pushing along your line of sight and pushes straight up instead, as hard as its
+Flight duration says. Horizontal speed is neither added to nor taken away. On top of that, a
+gliding player's sideways speed can be capped, so a straight line across the world stays slow
+while dives and climbs stay lively. Gliding itself is never touched, and vertical movement is
+never limited.
+
+The cap is a limit on speed rather than a multiplier on the boost: a firework pulls your speed
+toward a fixed target every tick, so scaling the push down only delays the same top speed.
+
+Optionally, elytra boosting can be switched off entirely in chosen dimensions. A boost rocket
+attached to a gliding player is then cancelled before it enters the world. Because the check is
+"is this a FireworkRocketEntity", rockets added by other mods that extend it are covered
+automatically - no per-mod ids to maintain.
+
+Optionally, boosts that come from a keybind rather than from a held firework can be limited to
+players with both hands empty. That makes it safe to bind such a boost to right-click without it
+firing every time you use a spyglass or a bow in mid-air.
+
+Must be installed on the client as well as the server: player movement is computed client side.
+'''
+
+[[dependencies.elytra_boost_limit]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.elytra_boost_limit]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.20.2)"
+    ordering="NONE"
+    side="BOTH"

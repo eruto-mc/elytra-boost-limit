@@ -14,7 +14,7 @@ plugins {
 
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.2.0'
+version = '1.3.0'
 group = 'net.erutobusiness'
 base { archivesName = 'elytra_boost_limit' }
 
@@ -33,9 +33,28 @@ mixin {
     config 'elytraboostlimit.mixins.json'
 }
 
+repositories {
+    // ⚠ トップレベルに置く。buildscript の中にも dependencies があるので、
+    //    そちらへ紛れ込ませるとプラグイン取得用の解決になって Could not find になる。
+    mavenCentral()
+    // Deeper and Darker と Elytra Slot は Modrinth の版名に `+` を含み
+    //（`1.3.3-forge+1.20.1` / `6.4.4+1.20.1`）、Gradle が `+` を動的バージョンとして
+    // 解釈するので指定できない。ファイルIDで指せる cursemaven から取る。
+    maven {
+        url = 'https://cursemaven.com'
+        content { includeGroup 'curse.maven' }
+    }
+}
+
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.3.0'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
+    // 加速キーの読み取り先。実行時は本体が居る前提なので同梱しない。
+    // 居なくても落ちないように、これらのクラスに触るのは ModList で確かめた後だけ
+    //（net.erutobusiness.elytraboostlimit.client の bridge 2本）。
+    compileOnly 'curse.maven:deeperdarker-659011:5906086'   // deeperdarker-forge-1.20.1-1.3.3.jar
+    compileOnly 'curse.maven:elytra-slot-317716:5778734'    // elytraslot-forge-6.4.4+1.20.1.jar
 }
 
 jar {

@@ -12,6 +12,9 @@ Minecraft 1.20.1 / Forge. MIT.
   the world stays slow while dives and climbs stay lively.
 - **Gliding itself is never touched**, and vertical movement is never limited.
 - Boosting can be switched off entirely per dimension.
+- A boost key **bound to a mouse button works**. Deeper and Darker's Soul Elytra boost is asked
+  for from `InputEvent.Key`, which Forge fires for the keyboard only, so binding it to a mouse
+  button leaves it dead; this mod polls the key once per client tick instead. See below.
 
 ## Why it works this way
 
@@ -25,6 +28,28 @@ and an ID list silently misses them. Subclasses are covered automatically.
 A rocket that is not attached to a gliding player is left alone, so ordinary fireworks and
 crossbow rockets behave normally.
 
+### Boost keys bound to a mouse button
+
+Right-click is the natural place for a boost, since it is where a firework already goes. But
+Deeper and Darker sends its Soul Elytra boost request from a handler on `InputEvent.Key`, and
+Forge fires that event for keyboard input only — mouse buttons arrive as `InputEvent.MouseButton`
+instead. Bind the boost to a mouse button and it never happens. Elytra Slot's Deeper and Darker
+integration listens to the same event, so it stops working at the same moment.
+
+With `fixMouseBoundBoostKey` on, this mod reads the key's pressed state once per client tick and
+sends the boost request on the press. Polling does not care which device the key lives on.
+
+Two guards keep it from misfiring:
+
+- It only acts **while the key is bound to a mouse button**. On a keyboard binding those mods'
+  own handlers already work, and doing nothing here is what keeps the boost from firing twice.
+- It only sends **while gliding**. Right-click is also "use item", so it is pressed constantly;
+  the server checks the same condition, and this just avoids the traffic.
+
+Both Deeper and Darker's packet and Elytra Slot's are sent, because the two look at different
+places: Deeper and Darker checks the chest slot, Elytra Slot checks the Curios slot, and neither
+looks at the other's. Whichever one does not apply simply does nothing.
+
 ## Config
 
 `config/elytra_boost_limit-common.toml`:
@@ -33,6 +58,7 @@ crossbow rockets behave normally.
 | - | - | - |
 | `blockedDimensions` | *(empty)* | Dimensions where boosting is switched off entirely |
 | `requireEmptyHands` | | Whether the boost requires free hands |
+| `fixMouseBoundBoostKey` | | Poll the Soul Elytra boost key so a mouse binding works |
 | `verticalOnlyBoost` | | Redirect the boost straight up instead of along the view |
 | `verticalBoostPerFlightLevel` | | How much height one Flight level gives |
 | `speedLimitEnabled` | | Whether the horizontal cap applies |

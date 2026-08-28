@@ -11,6 +11,7 @@ public final class Config {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> BLOCKED_DIMENSIONS;
     public static final ForgeConfigSpec.BooleanValue REQUIRE_EMPTY_HANDS;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> TOOLTIP_ITEMS;
+    public static final ForgeConfigSpec.BooleanValue FIX_MOUSE_BOUND_BOOST_KEY;
 
     public static final ForgeConfigSpec.BooleanValue VERTICAL_ONLY_BOOST;
     public static final ForgeConfigSpec.DoubleValue VERTICAL_BOOST_PER_FLIGHT_LEVEL;
@@ -47,6 +48,20 @@ public final class Config {
                         "Ignored when requireEmptyHands is false, or when the item is not present.")
                 .defineList("tooltipItems", List.of("deeperdarker:soul_elytra"),
                         o -> o instanceof String);
+
+        FIX_MOUSE_BOUND_BOOST_KEY = b
+                .comment("",
+                        "--- Boost keys bound to a mouse button ---",
+                        "Deeper and Darker asks for its Soul Elytra boost from InputEvent.Key, which",
+                        "Forge fires for the keyboard only: bind that key to a mouse button and the",
+                        "boost never happens. Elytra Slot's Deeper and Darker integration listens to",
+                        "the same event, so it goes quiet as well.",
+                        "With this on, the key is polled once per client tick instead, and the boost",
+                        "is requested when it goes down while gliding. It applies only while the key",
+                        "is bound to a mouse button, so a keyboard binding keeps using those mods'",
+                        "own handling and cannot fire twice.",
+                        "Does nothing when Deeper and Darker is absent.")
+                .define("fixMouseBoundBoostKey", true);
 
         VERTICAL_ONLY_BOOST = b
                 .comment("",

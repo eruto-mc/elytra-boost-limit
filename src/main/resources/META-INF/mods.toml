@@ -8,7 +8,10 @@ config="elytraboostlimit.mixins.json"
 
 [[mods]]
 modId="elytra_boost_limit"
-version="1.2.0"
+# jar の manifest の Implementation-Version から採る（build.gradle の version がそのまま入る）。
+# ⚠ 直書きにすると、版を上げたときに**ファイル名だけ変わって中身が古い版を名乗る**。
+#    Forge は握手でこの版を突き合わせるので、食い違うとサーバーに入れなくなる。
+version="${file.jarVersion}"
 displayName="Elytra Boost Limit"
 authors="erutobusiness"
 description='''
@@ -31,6 +34,11 @@ automatically - no per-mod ids to maintain.
 Optionally, boosts that come from a keybind rather than from a held firework can be limited to
 players with both hands empty. That makes it safe to bind such a boost to right-click without it
 firing every time you use a spyglass or a bow in mid-air.
+
+Such a boost key also works when it is bound to a mouse button. Deeper and Darker asks for its
+Soul Elytra boost from an event Forge fires for the keyboard only, so a mouse binding leaves it
+dead; this mod reads the key once per client tick instead, while gliding, and only while the key
+is on a mouse button so it cannot fire twice.
 
 Must be installed on the client as well as the server: player movement is computed client side.
 '''

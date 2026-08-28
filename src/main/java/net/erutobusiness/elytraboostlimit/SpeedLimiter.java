@@ -33,10 +33,27 @@ import net.minecraft.world.phys.Vec3;
  *
  * <h2>当てる場所</h2>
  *
- * {@code PlayerTickEvent}(END)。Forge の {@code onPlayerPostTick} は
- * {@code Player#tick} の末尾——{@code LivingEntity#tick}（＝ aiStep・travel・move）の
- * <b>後</b>——で発火する（1.20.1 の実 jar で確認）。よって「今 tick の移動は済み、
- * 削った結果は次 tick に効く」。1 tick の遅れは体感に出ない。
+ * ⚠⚠ <b>{@code PlayerTickEvent}(START) の最後尾</b>（{@code EventPriority.LOWEST}）。
+ * START は {@code Player#tick} の<b>前</b>なので、ここで削れば<b>その tick の移動が
+ * 削った速度で行われる</b>。
+ *
+ * <p>⚠ <b>2026-08-28 まで END に当てていたが、これは効かない場合がある。</b>
+ * END は移動の<b>後</b>なので、削った結果が効くのは次の tick。ところが
+ * <b>START で速度を足す MOD</b>が居ると、次の tick の START で上書きされ、
+ * <b>移動はいつも足された側の速度で行われる</b>＝上限が一度も掛からない。
+ *
+ * <p>実測（2026-08-28・`verify/scenarios/mods/soul-elytra-and-wings.json`）:
+ *
+ * <table border="1">
+ *   <tr><th>飛び方</th><th>水平（blocks/tick）</th><th>上限は効いたか</th></tr>
+ *   <tr><td>人間＋素のエリトラ</td><td>0.87</td><td>効いた（計算値 0.86）</td></tr>
+ *   <tr><td>ヴァルキリー＋Icarus の翼</td><td><b>2.45</b>（49 m/s）</td><td><b>効いていない</b></td></tr>
+ * </table>
+ *
+ * <p>Icarus は {@code EventHandler.onPlayerTick} が <b>START のときだけ</b>
+ * {@code IcarusClient.onPlayerTick} を呼んで推進を足す（bytecode で確認）。
+ * 素のエリトラには START で押す者が居ないので、END で削った値がそのまま移動に使われ、
+ * <b>効いているように見えていた</b>。
  *
  * <p>⚠ <b>クライアントにも入っていないと効かない。</b> プレイヤーの移動を計算しているのは
  * クライアントで、サーバーはその報告を受け取る側だから。当MODは両側に配る前提。

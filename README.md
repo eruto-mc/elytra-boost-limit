@@ -16,6 +16,18 @@ Minecraft 1.20.1 / Forge. MIT.
   for from `InputEvent.Key`, which Forge fires for the keyboard only, so binding it to a mouse
   button leaves it dead; this mod polls the key once per client tick instead. See below.
 
+### The cap has to be applied before the movement, not after
+
+The speed cap runs on `PlayerTickEvent` at **START**, with `EventPriority.LOWEST` so it is the
+last listener of that phase. START is before `Player#tick`, so the trimmed velocity is the one
+the tick actually moves with.
+
+Applying it at END — after the movement — looks equivalent and is not. A mod that adds velocity
+at START overwrites the trim before anything moves, so the cap never touches a single movement.
+Measured on 2026-08-28 with Icarus wings: **2.45 blocks/tick (49 m/s)** against a cap of
+0.75–1.5. A plain elytra measured 0.87 in the same run and obeyed the cap, because nothing
+pushes it at START. Trimming at START fixed the wings (0.75) and left the elytra unchanged.
+
 ## Why it works this way
 
 Rockets are cancelled at `EntityJoinLevelEvent`, i.e. the moment they spawn — not a tick later.

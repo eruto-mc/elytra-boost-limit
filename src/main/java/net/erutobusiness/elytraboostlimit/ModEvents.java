@@ -7,6 +7,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -38,13 +39,30 @@ public final class ModEvents {
         /**
          * 滑空中の水平速度を毎 tick 見て、上限を超えていたら水平成分だけ縮める。
          *
-         * <p>Phase.END は {@code Player#tick} の末尾＝移動計算の後なので、削った結果は
-         * 次の tick の移動に効く。⚠ <b>サーバー側だけでは効かない</b>——プレイヤーの移動を
-         * 計算しているのはクライアントなので、両側で走らせる（この購読に側の条件は付けない）。
+         * <p>⚠⚠ <b>Phase.START の最後尾で削る。</b> 1 tick の中の順序が要点:
+         *
+         * <pre>
+         *   START  … 他の MOD が速度を足す（推進をつける翼など）
+         *   START  … ここで削る（LOWEST なので足す側より後に走る）
+         *   途中   … Player#tick が travel/move を回す ＝ 削った速度で動く
+         *   END    … 移動は済んでいる
+         * </pre>
+         *
+         * <p>⚠ <b>END で削ると、毎 tick の移動には一度も効かない。</b> START で速度を足す MOD が
+         * 居ると、END で削った値は次の tick の START で上書きされ、移動はいつも足された側の
+         * 速度で行われる。実測（2026-08-28）: Icarus の翼で水平 <b>2.45 blocks/tick</b>
+         * ＝ 49 m/s が出ていた（上限は 0.75〜1.5）。同じ手順で素のエリトラは 0.87 で、
+         * こちらは計算どおり上限に収まっていた——<b>START で押す者が居ないから</b>。
+         *
+         * <p>⚠ {@code EventPriority.LOWEST} は「同じ phase の中で最後に走る」ための指定。
+         * Forge は優先度の高いものから呼ぶので、既定（NORMAL）で足す側より後になる。
+         *
+         * <p>⚠ <b>サーバー側だけでは効かない</b>——プレイヤーの移動を計算しているのは
+         * クライアントなので、両側で走らせる（この購読に側の条件は付けない）。
          */
-        @SubscribeEvent
+        @SubscribeEvent(priority = EventPriority.LOWEST)
         public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-            if (event.phase != TickEvent.Phase.END) {
+            if (event.phase != TickEvent.Phase.START) {
                 return;
             }
             SpeedLimiter.apply(event.player);
